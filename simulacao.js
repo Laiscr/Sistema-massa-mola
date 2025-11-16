@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // --- 1. CONFIGURAÇÃO ---
+    // --- CONFIGURAÇÃO ---
     const canvasSim = document.getElementById('simulacaoCanvas');
     const ctxSim = canvasSim.getContext('2d');
     const LARGURA_SIM = canvasSim.width;
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const btnVerGraficoVelocidade = document.getElementById('btnVerGraficoVelocidade');
     const janelasGrafico = document.querySelectorAll('.janela-grafico');
     
-    // Constantes Físicas (Layout Unificado)
+    // Constantes Físicas
     const pontoEquilibrio = LARGURA_SIM / 2;
     const Y_EIXO_X = ALTURA_SIM / 2; 
     
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function () {
     sliderPosicao.min = -AMPLITUDE_MAXIMA;
     sliderPosicao.max = AMPLITUDE_MAXIMA;
 
-    // --- 2. FUNÇÕES DE CÁLCULO, FÍSICA E DESENHO ---
+    // --- FUNÇÕES DE CÁLCULO, FÍSICA E DESENHO ---
     
     function atualizarTamanhoBloco() {
         let m = parseFloat(sliderMassa.value);
@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function () {
         
         let xProjecao = centroX + x;
         
-        // *** ROTAÇÃO ANTI-HORÁRIA (ACW) ***
+        // ROTAÇÃO ANTI-HORÁRIA
         // O fasor (vetor) no MHS é (x, -v/ω)
         let anguloFasorialRad = Math.atan2(-velocidade / omega, x);
         let particulaX = centroX + ampAtual * Math.cos(anguloFasorialRad);
@@ -161,9 +161,8 @@ document.addEventListener('DOMContentLoaded', function () {
         grad.addColorStop(0, '#007bff'); grad.addColorStop(1, '#0056b3'); ctxSim.fillStyle = grad; 
         ctxSim.fillRect(posXBloco, Y_BLOCO, blocoW, blocoH);
         
-        // ===================================================================
-        // *** Constantes de Estilo para o Texto ***
-        // ===================================================================
+        
+        // Constantes de Estilo para o Texto
         const FONT_REGULAR = '14px Arial';
         const FONT_BOLD = 'bold 14px Arial';
         const FONT_TITLE = 'bold 14px Arial';
@@ -189,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function () {
             ctxSim.fillStyle = '#0056b3';
             ctxSim.beginPath(); ctxSim.arc(particulaX, particulaY, 8, 0, 2 * Math.PI); ctxSim.fill();
             
-            // Desenha o ângulo Phi (φ) - SÓ QUANDO PAUSADO
+            // Desenha o ângulo Phi - PAUSADO
             if (!rodando && estadoInicialSelecionado !== null) { 
                 
                 let xRelativo = particulaX - centroX;
@@ -211,7 +210,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 ctxSim.beginPath();
                 ctxSim.moveTo(centroX, centroY);
 
-                // *** CORREÇÃO: Arco Visual (Phi) ***
                 // 1. O arco *sempre* começa em 0
                 let anguloInicioArco = 0;
                 
@@ -274,9 +272,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
-        // ===================================================================
-        // *** 8. NOVAS INFORMAÇÕES NO CANVAS (Canto superior esquerdo) ***
-        // ===================================================================
+        // 8. NOVAS INFORMAÇÕES NO CANVAS (Canto superior esquerdo)
         const yStep = 20; // Espaçamento vertical
         let currentY;
         
@@ -305,7 +301,7 @@ document.addEventListener('DOMContentLoaded', function () {
         ctxSim.fillText(`${(x / fatorPosicao).toFixed(2)} m`, tabStopLeft, currentY);
         currentY += yStep;
 
-        // Omega (ω)
+        // Omega
         ctxSim.fillStyle = COLOR_LABEL; ctxSim.font = FONT_REGULAR;
         ctxSim.fillText(`ω =`, 20, currentY);
         ctxSim.fillStyle = COLOR_VALUE; ctxSim.font = FONT_BOLD;
@@ -326,10 +322,7 @@ document.addEventListener('DOMContentLoaded', function () {
         ctxSim.fillText(`${f.toFixed(2)} Hz`, tabStopLeft, currentY);
 
 
-        // ===================================================================
-        // *** 9. NOVAS INFORMAÇÕES NO CANVAS (Canto superior direito) ***
-        // ===================================================================
-        
+        // 9. NOVAS INFORMAÇÕES NO CANVAS (Canto superior direito)
         const tabLabelRight = LARGURA_SIM - 100; // Posição X onde os RÓTULOS terminam (ex: 700)
         const tabValueRight = LARGURA_SIM - 20;  // Posição X onde os VALORES terminam (ex: 780)
         
@@ -362,10 +355,7 @@ document.addEventListener('DOMContentLoaded', function () {
         ctxSim.fillText(`${(velocidade / fatorPosicao).toFixed(2)} m/s`, tabValueRight, currentY); // Termina em x=780
 
 
-        // ===================================================================
-        // *** 10. NOVAS INFORMAÇÕES NO CANVAS (Canto inferior esquerdo) ***
-        // ===================================================================
-        
+        // 10. NOVAS INFORMAÇÕES NO CANVAS (Canto inferior esquerdo) 
         const tabStopBottom = 160; // Posição X para valores de energia
         const cantoInferiorY = ALTURA_SIM - 20;
         
@@ -406,7 +396,7 @@ document.addEventListener('DOMContentLoaded', function () {
             let angulo = omega * tempoSimulacao;
             x = amplitude * Math.cos(angulo);
             
-            // *** CORREÇÃO 1: Rotação Anti-Horária (ACW) ***
+            // Rotação Anti-Horária
             // v = -Aω*sin(ωt)
             velocidade = -amplitude * omega * Math.sin(angulo);
             forca = -k * x;
@@ -463,7 +453,7 @@ document.addEventListener('DOMContentLoaded', function () {
         animacaoId = requestAnimationFrame(loopAnimacao); 
     }
 
-    // --- 3. FUNÇÕES DE CONTROLE ---
+    // --- FUNÇÕES DE CONTROLE ---
     function inicializarGraficos() {
         const optionsBase = { responsive: true, maintainAspectRatio: false, animation: false, scales: { x: { title: { display: true, text: 'Tempo (s)' } } }, plugins: { legend: { position: 'top' } } };
         dadosGraficoEnergia.labels = []; dadosGraficoEnergia.datasets.forEach(d => d.data = []); dadosGraficoPosicao.labels = []; dadosGraficoPosicao.datasets.forEach(d => d.data = []); dadosGraficoVelocidade.labels = []; dadosGraficoVelocidade.datasets.forEach(d => d.data = []);
@@ -503,7 +493,7 @@ document.addEventListener('DOMContentLoaded', function () {
         
         amplitude = Math.abs(x); 
         
-        // *** CORREÇÃO 1: Rotação Anti-Horária (ACW) ***
+        // Rotação Anti-Horária
         tempoSimulacao = Math.acos(x / amplitude) / omega;
         
         velocidade = 0;
@@ -535,7 +525,6 @@ document.addEventListener('DOMContentLoaded', function () {
         
         amplitude = Math.abs(x);
         
-        // *** CORREÇÃO 1: Rotação Anti-Horária (ACW) ***
         tempoSimulacao = Math.acos(x / amplitude) / omega;
         
         rodando = true; 
@@ -591,7 +580,7 @@ document.addEventListener('DOMContentLoaded', function () {
         inicializarGraficos();
     }
     
-    // --- 4. EVENT LISTENERS ---
+    // --- EVENT LISTENERS ---
     btnEsticada.addEventListener('click', () => selecionarEstado('esticada'));
     btnComprimida.addEventListener('click', () => selecionarEstado('comprimida'));
     
@@ -669,7 +658,7 @@ document.addEventListener('DOMContentLoaded', function () {
     btnVerGraficoPosicao.addEventListener('click', () => document.getElementById('janelaGraficoPosicao').style.display = 'block');
     btnVerGraficoVelocidade.addEventListener('click', () => document.getElementById('janelaGraficoVelocidade').style.display = 'block');
 
-    // --- 5. LÓGICA PARA ARRASTAR/REDIMENSIONAR JANELAS ---
+    // --- LÓGICA PARA ARRASTAR/REDIMENSIONAR JANELAS ---
     
     function makeDraggable(elmnt) {
         let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
@@ -708,9 +697,10 @@ document.addEventListener('DOMContentLoaded', function () {
         makeResizable(janela);
     });
 
-    // --- 6. INÍCIO ---
+    // --- INÍCIO ---
     atualizarTamanhoBloco();
     resetarSimulacao();
     btnPausar.style.display = 'none';
     btnContinuar.style.display = 'none';
+
 });
