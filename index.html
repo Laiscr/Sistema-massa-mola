@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulação Massa-Mola (v37 - Layout Limpo)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding-top: 20px; height: auto; min-height: 100vh; margin: 0; background-color: #f4f7f6; }
+        canvas { border: 1px solid #ccc; background-color: #ffffff; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); display: block; }
+        .controles { margin-top: 10px; padding: 10px 15px; background-color: #ffffff; border-radius: 8px; display: flex; flex-direction: column; gap: 15px; align-items: flex-start; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); }
+        .controles-grupo { display: flex; flex-direction: column; align-items: flex-start; width: 100%; }
+        .controles-grupo > div { display: flex; gap: 8px; }
+        button { font-size: 14px; padding: 6px 10px; cursor: pointer; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 5px; }
+        button:hover { background-color: #f1f1f1; }
+        .btn-escolha { border: 2px solid #ccc; }
+        .btn-escolha.active { border: 2px solid #007bff; font-weight: bold; color: #007bff; background-color: #e6f2ff; }
+        #btnIniciar { background-color: #d4edda; border-color: #c3e6cb; font-weight: bold; }
+        #btnContinuar { background-color: #d4edda; border-color: #c3e6cb; }
+        #btnPausar { background-color: #fff3cd; border-color: #ffeeba; }
+        #btnResetar { background-color: #e2e3e5; border-color: #d6d8db; }
+        button:disabled { cursor: not-allowed; background-color: #eee; color: #aaa; }
+        label { margin-bottom: 5px; font-size: 13px; font-weight: bold; color: #333; }
+        .grupo-posicao { align-items: stretch; min-width: 200px; }
+        
+        /* Classes de display de dados não são mais necessárias */
+        /* .display-dados { ... } */
+        /* .display-energia { ... } */
+
+        /* Layout Principal de 2 Colunas */
+        .container-principal { display: flex; flex-direction: row; gap: 20px; width: 95%; max-width: 1400px; margin-top: 15px; align-items: flex-start; position: relative; }
+        .coluna { display: flex; flex-direction: column; gap: 10px; }
+        .coluna-esquerda { min-width: 300px; flex-shrink: 0; }
+        .coluna-direita { flex-grow: 1; align-items: center; }
+        .painel-info { width: 100%; flex-direction: column; align-items: flex-start; padding: 15px; box-sizing: border-box; }
+        .painel-info .controles-grupo { width: 100%; }
+        .painel-info input[type=range] { width: 100%; }
+
+        /* Janelas Flutuantes */
+        .janela-grafico { display: none; position: absolute; width: 550px; height: 350px; min-width: 300px; min-height: 250px; background-color: white; border: 1px solid #aaa; box-shadow: 0 5px 15px rgba(0,0,0,0.2); border-radius: 5px; z-index: 1000; top: 100px; left: 300px; resize: both; overflow: auto; }
+        .janela-header { padding: 8px 12px; background-color: #f1f1f1; border-bottom: 1px solid #ddd; cursor: move; display: flex; justify-content: space-between; align-items: center; border-radius: 5px 5px 0 0; }
+        .janela-header h3 { margin: 0; font-size: 1em; }
+        .janela-fechar { cursor: pointer; border: none; background: none; font-size: 1.2em; font-weight: bold; color: #888; }
+        .janela-conteudo { padding: 10px; height: calc(100% - 60px); }
+        .janela-conteudo canvas { width: 100% !important; height: 100% !important; }
+        
+        select { font-size: 16px; padding: 8px 10px; border-radius: 5px; border: 1px solid #ddd; width: 100%; }
+    </style>
+</head>
+<body>
+
+    <h1>Simulação: Sistema Massa-Mola (MHS e MHA)</h1>
+    
+    <div class="container-principal">
+        
+        <div class="coluna coluna-esquerda">
+            
+            <div class="controles painel-info">
+                <div class="controles-grupo">
+                    <label>1º - Escolha o Início:</label>
+                    <div>
+                        <button id="btnEsticada" class="btn-escolha">Mola Esticada</button>
+                        <button id="btnComprimida" class="btn-escolha">Mola Comprimida</button>
+                    </div>
+                </div>
+                <div class="controles-grupo grupo-posicao">
+                    <label for="sliderPosicao">...ou Posição Manual:</label>
+                    <input type="range" id="sliderPosicao" min="-350" max="350" value="0" style="width: 100%;">
+                </div>
+                <div class="controles-grupo">
+                    <label>3º - Ação:</label>
+                    <div>
+                        <button id="btnIniciar">Iniciar</button>
+                        <button id="btnPausar">Pausar</button>
+                        <button id="btnContinuar">Continuar</button>
+                        <button id="btnResetar">Resetar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controles painel-info">
+                <div class="controles-grupo">
+                    <label>2º - Escolha a superfície:</label>
+                    <select id="selectAtrito">
+                        <option value="ideal">Sem Atrito (Ideal)</option>
+                        <option value="gelo">Gelo</option>
+                        <option value="madeira">Madeira</option>
+                        <option value="lixa">Lixa</option>
+                    </select>
+                </div>
+                <div class="controles-grupo">
+                    <label>Massa (kg): <span id="valorMassa">10</span></label>
+                    <input type="range" id="sliderMassa" min="1" max="50" value="10">
+                    <label>Constante (k): <span id="valorMola">10</span></label>
+                    <input type="range" id="sliderMola" min="1" max="50" value="10">
+                </div>
+                 </div>
+
+            <div class="controles painel-info">
+                <label>Gráficos:</label>
+                <div>
+                    <button id="btnVerGraficoEnergia">Ver Energia</button>
+                    <button id="btnVerGraficoPosicao">Ver Posição</button>
+                    <button id="btnVerGraficoVelocidade">Ver Velocidade</button>
+                </div>
+             </div>
+
+             </div> 
+
+        <div class="coluna coluna-direita">
+            <canvas id="simulacaoCanvas" width="800" height="800"></canvas>
+            <p>Atrito atual: <span id="infoAtrito">Sem Atrito (Ideal)</span></p>
+        </div> 
+    </div>
+
+    <div id="janelaGraficoEnergia" class="janela-grafico"><div class="janela-header"><h3>Gráfico: Energia vs. Tempo</h3><button class="janela-fechar" onclick="this.parentElement.parentElement.style.display='none'">&times;</button></div><div class="janela-conteudo"><canvas id="graficoEnergia"></canvas></div><div class="janela-redimensionar"></div></div>
+    <div id="janelaGraficoPosicao" class="janela-grafico" style="top: 150px; left: 350px;"><div class="janela-header"><h3>Gráfico: Posição vs. Tempo</h3><button class="janela-fechar" onclick="this.parentElement.parentElement.style.display='none'">&times;</button></div><div class="janela-conteudo"><canvas id="graficoPosicao"></canvas></div><div class="janela-redimensionar"></div></div>
+    <div id="janelaGraficoVelocidade" class="janela-grafico" style="top: 200px; left: 400px;"><div class="janela-header"><h3>Gráfico: Velocidade vs. Tempo</h3><button class="janela-fechar" onclick="this.parentElement.parentElement.style.display='none'">&times;</button></div><div class="janela-conteudo"><canvas id="graficoVelocidade"></canvas></div><div class="janela-redimensionar"></div></div>
+
+    <script src="simulacao.js"></script>
+
+</body>
+</html>
